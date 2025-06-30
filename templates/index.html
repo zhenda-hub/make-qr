@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Generator</title>
+    <style>
+        .upload-area {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .progress {
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>多媒体二维码生成器</h1>
+    
+    <form id="uploadForm" enctype="multipart/form-data">
+        <div class="upload-area">
+            <input type="file" name="files" multiple accept="image/*,video/*">
+            <button type="submit">上传文件</button>
+        </div>
+        <div class="progress" id="progress">上传中...</div>
+    </form>
+
+    <script>
+        document.getElementById('uploadForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const progress = document.getElementById('progress');
+            progress.style.display = 'block';
+            
+            const formData = new FormData();
+            const files = document.querySelector('input[type="file"]').files;
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                alert(result.message);
+            } catch (error) {
+                alert('上传失败: ' + error);
+            } finally {
+                progress.style.display = 'none';
+            }
+        };
+    </script>
+</body>
+</html>
