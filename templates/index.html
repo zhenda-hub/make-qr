@@ -1,56 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" 
+      x-init="$watch('darkMode', val => {
+        localStorage.setItem('darkMode', val);
+        document.documentElement.classList.toggle('dark', val);
+      })"
+      :class="{ 'dark': darkMode }">
 <head>
-    <title>QR Generator</title>
-    <style>
-        .upload-area {
-            border: 2px dashed #ccc;
-            padding: 20px;
-            text-align: center;
-            margin: 20px 0;
-        }
-        .progress {
-            margin-top: 10px;
-            display: none;
-        }
-    </style>
-</head>
-<body>
-    <h1>多媒体二维码生成器</h1>
-    
-    <form id="uploadForm" enctype="multipart/form-data">
-        <div class="upload-area">
-            <input type="file" name="files" multiple accept="image/*,video/*">
-            <button type="submit">上传文件</button>
-        </div>
-        <div class="progress" id="progress">上传中...</div>
-    </form>
-
+    <title>QR 生成器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.0/dist/cdn.min.js" defer></script>
     <script>
-        document.getElementById('uploadForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const progress = document.getElementById('progress');
-            progress.style.display = 'block';
-            
-            const formData = new FormData();
-            const files = document.querySelector('input[type="file"]').files;
-            for (let i = 0; i < files.length; i++) {
-                formData.append('files', files[i]);
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {"50":"#eff6ff","100":"#dbeafe","200":"#bfdbfe","300":"#93c5fd","400":"#60a5fa","500":"#3b82f6","600":"#2563eb","700":"#1d4ed8","800":"#1e40af","900":"#1e3a8a"}
+                    }
+                }
             }
-
-            try {
-                const response = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-                const result = await response.json();
-                alert(result.message);
-            } catch (error) {
-                alert('上传失败: ' + error);
-            } finally {
-                progress.style.display = 'none';
-            }
-        };
+        }
     </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- 导航栏 -->
+        <nav class="flex justify-between items-center mb-12">
+            <div class="text-2xl font-bold text-primary-600 dark:text-primary-400">QR Generator</div>
+            <button @click="darkMode = !darkMode" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700">
+                <span x-show="!darkMode">🌙</span>
+                <span x-show="darkMode">☀️</span>
+            </button>
+        </nav>
+
+        <!-- 主内容 -->
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div class="space-y-6">
+                <h1 class="text-4xl font-bold text-gray-800 dark:text-white">
+                    创建您的专属<br>
+                    <span class="text-primary-600 dark:text-primary-400">二维码页面</span>
+                </h1>
+                <p class="text-lg text-gray-600 dark:text-gray-300">
+                    轻松生成包含自定义内容的精美二维码，分享您的想法和内容。
+                </p>
+                <div class="space-y-4">
+                    <a href="/qr-form" class="inline-block px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors">
+                        开始创建
+                    </a>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                        无需注册，完全免费使用
+                    </p>
+                </div>
+            </div>
+            <div class="hidden md:block">
+                <div class="relative">
+                    <div class="absolute -inset-4 bg-gradient-to-r from-primary-400 to-primary-600 rounded-2xl opacity-20 blur"></div>
+                    <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <div class="flex justify-center mb-4">
+                            <div class="w-48 h-48 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                                <span class="text-gray-400 dark:text-gray-500">二维码预览</span>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <h3 class="font-medium text-gray-800 dark:text-white">示例页面</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">扫描查看内容</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 功能特点 -->
+        <div class="mt-16">
+            <h2 class="text-2xl font-bold text-center mb-8 text-gray-800 dark:text-white">为什么选择我们</h2>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
+                    <div class="text-primary-500 dark:text-primary-400 text-2xl mb-3">🎨</div>
+                    <h3 class="font-medium text-lg mb-2 text-gray-800 dark:text-white">美观设计</h3>
+                    <p class="text-gray-600 dark:text-gray-400">精心设计的页面模板，让您的二维码与众不同</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
+                    <div class="text-primary-500 dark:text-primary-400 text-2xl mb-3">⚡</div>
+                    <h3 class="font-medium text-lg mb-2 text-gray-800 dark:text-white">快速生成</h3>
+                    <p class="text-gray-600 dark:text-gray-400">简单三步，即可生成您的专属二维码</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
+                    <div class="text-primary-500 dark:text-primary-400 text-2xl mb-3">🔒</div>
+                    <h3 class="font-medium text-lg mb-2 text-gray-800 dark:text-white">安全可靠</h3>
+                    <p class="text-gray-600 dark:text-gray-400">所有数据仅在您设备上处理，保护隐私</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
