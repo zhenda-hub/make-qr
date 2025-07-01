@@ -5,7 +5,10 @@
 
 ## 技术栈
 - 后端: FastAPI + Uvicorn
-- 前端: Jinja2模板 + HTML5
+- 前端: 
+  - Jinja2模板
+  - Tailwind CSS (UI框架)
+  - Alpine.js (交互逻辑)
 - 二维码: qrcode库
 - 文件处理: python-multipart
 
