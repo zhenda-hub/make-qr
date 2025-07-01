@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html x-data="{
+    darkMode: localStorage.getItem('darkMode') === 'true',
+    formData: {
+        title: '我的二维码页面',
+        content: '欢迎扫描此二维码',
+        qrColor: '#3b82f6',
+        qrSize: 200
+    },
+    qrImage: null,
+    pageUrl: null
+}"
+x-init="$watch('darkMode', val => {
+    localStorage.setItem('darkMode', val);
+    document.documentElement.classList.toggle('dark', val);
+})"
+:class="{ 'dark': darkMode }">
+<head>
+    <title>QR 生成器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.0/dist/cdn.min.js" defer></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {"50":"#eff6ff","100":"#dbeafe","200":"#bfdbfe","300":"#93c5fd","400":"#60a5fa","500":"#3b82f6","600":"#2563eb","700":"#1d4ed8","800":"#1e40af","900":"#1e3a8a"}
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- 头部 -->
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white">QR 生成器</h1>
+            <button @click="darkMode = !darkMode" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700">
+                <span x-show="!darkMode">🌙</span>
+                <span x-show="darkMode">☀️</span>
+            </button>
+        </div>
+
+        <!-- 表单区域 -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">创建二维码页面</h2>
+            
+            <form @submit.prevent="generatePage" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">页面标题</label>
+                    <input x-model="formData.title" type="text" 
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">页面内容</label>
+                    <textarea x-model="formData.content" rows="5"
+                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">二维码颜色</label>
+                        <input x-model="formData.qrColor" type="color"
+                               class="w-full h-10 px-1 py-1 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">二维码尺寸</label>
+                        <input x-model="formData.qrSize" type="range" min="100" max="500" step="10"
+                               class="w-full">
+                        <span x-text="formData.qrSize + 'px'" class="text-sm text-gray-600 dark:text-gray-300"></span>
+                    </div>
+                </div>
+
+                <button type="submit" class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700">
+                    生成二维码
+                </button>
+            </form>
+        </div>
+
+        <!-- 结果展示 -->
+        <div x-show="qrImage" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">你的二维码</h2>
+            <div class="flex flex-col md:flex-row gap-8">
+                <div class="flex-1">
+                    <img :src="qrImage" alt="生成的二维码" class="mx-auto border border-gray-200 dark:border-gray-600"
+                         :style="'width: ' + formData.qrSize + 'px; height: ' + formData.qrSize + 'px'">
+                </div>
+                <div class="flex-1 space-y-4">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-2">页面预览</h3>
+                        <div class="p-4 border border-gray-200 dark:border-gray-600 rounded-md">
+                            <h4 x-text="formData.title" class="text-xl font-bold mb-2"></h4>
+                            <p x-text="formData.content" class="text-gray-700 dark:text-gray-300"></p>
+                        </div>
+                    </div>
+                    <div>
+                        <a :href="pageUrl" target="_blank" 
+                           class="text-primary-600 dark:text-primary-400 hover:underline">查看完整页面</a>
+                    </div>
+                    <button @click="downloadQR" class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700">
+                        下载二维码
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('qr', {
+                async generatePage() {
+                    const response = await fetch('/generate-page', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(this.formData)
+                    });
+                    const result = await response.json();
+                    this.pageUrl = result.pageUrl;
+                    this.generateQR();
+                },
+                async generateQR() {
+                    const response = await fetch('/generate-qrcode', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            url: this.pageUrl,
+                            color: this.formData.qrColor,
+                            size: this.formData.qrSize
+                        })
+                    });
+                    const result = await response.json();
+                    this.qrImage = result.qrImage;
+                },
+                async downloadQR() {
+                    const link = document.createElement('a');
+                    link.href = this.qrImage;
+                    link.download = `qr-${Date.now()}.png`;
+                    link.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
