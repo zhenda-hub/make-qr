@@ -27,10 +27,15 @@
         <!-- 导航栏 -->
         <nav class="flex justify-between items-center mb-12">
             <div class="text-2xl font-bold text-primary-600 dark:text-primary-400">QR Generator</div>
-            <button @click="darkMode = !darkMode" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700">
-                <span x-show="!darkMode">🌙</span>
-                <span x-show="darkMode">☀️</span>
-            </button>
+            <div class="flex items-center space-x-6">
+                <a href="/" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium">首页</a>
+                <a href="/qr-form" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium">生成二维码</a>
+                <a href="#" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium">关于我们</a>
+                <button @click="darkMode = !darkMode" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700">
+                    <span x-show="!darkMode">🌙</span>
+                    <span x-show="darkMode">☀️</span>
+                </button>
+            </div>
         </nav>
 
         <!-- 主内容 -->
