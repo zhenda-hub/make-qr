@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN" x-data="{
+    darkMode: localStorage.getItem('darkMode') === 'true',
+    pages: [
+        {id: 1, title: '产品介绍页', updated: '今天 14:30', blocks: 3},
+        {id: 2, title: '活动宣传页', updated: '昨天 10:15', blocks: 5},
+        {id: 3, title: '公司简介', updated: '2023-07-25', blocks: 4}
+    ],
+    currentPage: null,
+    blocks: [],
+    newBlockType: 'text'
+}"
+x-init="$watch('darkMode', val => {
+    localStorage.setItem('darkMode', val);
+    document.documentElement.classList.toggle('dark', val);
+})"
+:class="{ 'dark': darkMode }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网页管理 - QR Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.0/dist/cdn.min.js" defer></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {"50":"#eff6ff","100":"#dbeafe","200":"#bfdbfe","300":"#93c5fd","400":"#60a5fa","500":"#3b82f6","600":"#2563eb","700":"#1d4ed8","800":"#1e40af","900":"#1e3a8a"},
+                        secondary: {"500":"#3f37c9"},
+                        accent: {"500":"#4cc9f0"}
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+        }
+        .dark body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+        .block-handle {
+            cursor: move;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- 导航栏 -->
+    <header class="bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <nav class="flex justify-between items-center py-4">
+                <div class="flex items-center gap-3 text-2xl font-bold">
+                    <i class="fas fa-qrcode text-accent-500"></i>
+                    <span>QR Studio</span>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <a href="/" class="px-3 py-2 rounded-md font-medium hover:bg-white/10 transition">
+                        <i class="fas fa-home mr-2"></i>首页
+                    </a>
+                    <button @click="darkMode = !darkMode" class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition">
+                        <span x-show="!darkMode"><i class="fas fa-moon"></i></span>
+                        <span x-show="darkMode"><i class="fas fa-sun"></i></span>
+                    </button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- 页面标题 -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 dark:text-white">网页管理</h1>
+                <p class="text-gray-600 dark:text-gray-400">创建、编辑和管理您的自定义网页内容</p>
+            </div>
+            <button class="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors">
+                <i class="fas fa-plus mr-2"></i>新建网页
+            </button>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+            <!-- 页面头部 -->
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white" x-text="currentPage ? currentPage.title : '选择网页'"></h2>
+                <div class="flex gap-3">
+                    <button class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors">
+                        <i class="fas fa-save mr-2"></i>保存
+                    </button>
+                    <button class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors">
+                        <i class="fas fa-qrcode mr-2"></i>生成二维码
+                    </button>
+                </div>
+            </div>
+
+            <!-- 页面管理区 -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-0 lg:gap-6">
+                <!-- 网页列表 -->
+                <div class="lg:col-span-1 p-6 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-700">
+                    <div class="mb-4 flex gap-2">
+                        <input type="text" placeholder="搜索网页..." class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700">
+                        <button class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-3">
+                        <template x-for="page in pages" :key="page.id">
+                            <div @click="currentPage = page" 
+                                 class="p-4 border rounded-lg cursor-pointer transition-colors"
+                                 :class="{
+                                     'border-primary-500 bg-blue-50 dark:bg-blue-900/30': currentPage && currentPage.id === page.id,
+                                     'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50': !currentPage || currentPage.id !== page.id
+                                 }">
+                                <h3 class="font-medium" x-text="page.title"></h3>
+                                <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                    <span x-text="'修改: ' + page.updated"></span>
+                                    <span x-text="page.blocks + '个内容块'"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- 编辑器区域 -->
+                <div class="lg:col-span-3 p-6">
+                    <!-- 页面标题编辑 -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">网页标题</label>
+                        <input type="text" x-model="currentPage.title" 
+                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition"
+                               placeholder="输入网页标题">
+                    </div>
+
+                    <!-- 内容块列表 -->
+                    <div class="space-y-4" x-data="{ draggedBlock: null }">
+                        <template x-for="(block, index) in blocks" :key="index">
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                                <div class="bg-gray-50 dark:bg-gray-700/50 px-4 py-3 flex justify-between items-center">
+                                    <div class="flex items-center gap-2">
+                                        <span class="block-handle text-gray-400 dark:text-gray-500">
+                                            <i class="fas fa-grip-vertical"></i>
+                                        </span>
+                                        <span x-text="getBlockTypeName(block.type)" class="font-medium"></span>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button class="p-2 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                                            <i class="fas fa-arrow-up"></i>
+                                        </button>
+                                        <button class="p-2 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                                            <i class="fas fa-arrow-down"></i>
+                                        </button>
+                                        <button class="p-2 text-red-500 hover:text-red-700">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <template x-if="block.type === 'text'">
+                                        <textarea class="w-full min-h-[100px] p-3 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white" 
+                                                  x-model="block.content" placeholder="输入文本内容..."></textarea>
+                                    </template>
+                                    <template x-if="block.type === 'image'">
+                                        <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
+                                            <i class="fas fa-image text-4xl text-gray-400 dark:text-gray-500 mb-3"></i>
+                                            <p class="text-gray-500 dark:text-gray-400">点击上传图片</p>
+                                        </div>
+                                    </template>
+                                    <template x-if="block.type === 'video'">
+                                        <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
+                                            <i class="fas fa-video text-4xl text-gray-400 dark:text-gray-500 mb-3"></i>
+                                            <p class="text-gray-500 dark:text-gray-400">点击上传视频</p>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- 添加内容块 -->
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">添加内容块</label>
+                        <div class="flex gap-3">
+                            <select x-model="newBlockType" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                                <option value="text">文本块</option>
+                                <option value="image">图片块</option>
+                                <option value="video">视频块</option>
+                            </select>
+                            <button @click="addBlock" class="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors">
+                                <i class="fas fa-plus mr-2"></i>添加
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getBlockTypeName(type) {
+            const names = {
+                'text': '文本块',
+                'image': '图片块', 
+                'video': '视频块'
+            };
+            return names[type] || '未知块';
+        }
+
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('pageManager', {
+                addBlock() {
+                    const type = Alpine.store('pageManager').newBlockType;
+                    const newBlock = {
+                        id: Date.now(),
+                        type: type,
+                        content: type === 'text' ? '' : null
+                    };
+                    Alpine.store('pageManager').blocks.push(newBlock);
+                },
+                moveBlockUp(index) {
+                    if (index > 0) {
+                        const blocks = Alpine.store('pageManager').blocks;
+                        [blocks[index], blocks[index-1]] = [blocks[index-1], blocks[index]];
+                    }
+                },
+                moveBlockDown(index) {
+                    const blocks = Alpine.store('pageManager').blocks;
+                    if (index < blocks.length - 1) {
+                        [blocks[index], blocks[index+1]] = [blocks[index+1], blocks[index]];
+                    }
+                },
+                deleteBlock(index) {
+                    Alpine.store('pageManager').blocks.splice(index, 1);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

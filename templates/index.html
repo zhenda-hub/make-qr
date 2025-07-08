@@ -1,12 +1,15 @@
 <!DOCTYPE html>
-<html x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" 
+<html lang="zh-CN" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" 
       x-init="$watch('darkMode', val => {
         localStorage.setItem('darkMode', val);
         document.documentElement.classList.toggle('dark', val);
       })"
       :class="{ 'dark': darkMode }">
 <head>
-    <title>QR 生成器</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Studio - 二维码生成与网页管理平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.0/dist/cdn.min.js" defer></script>
     <script>
@@ -15,87 +18,138 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: {"50":"#eff6ff","100":"#dbeafe","200":"#bfdbfe","300":"#93c5fd","400":"#60a5fa","500":"#3b82f6","600":"#2563eb","700":"#1d4ed8","800":"#1e40af","900":"#1e3a8a"}
+                        primary: {"50":"#eff6ff","100":"#dbeafe","200":"#bfdbfe","300":"#93c5fd","400":"#60a5fa","500":"#3b82f6","600":"#2563eb","700":"#1d4ed8","800":"#1e40af","900":"#1e3a8a"},
+                        secondary: {"500":"#3f37c9"},
+                        accent: {"500":"#4cc9f0"}
                     }
                 }
             }
         }
     </script>
+    <style>
+        .gradient-text {
+            background: linear-gradient(to right, #3b82f6, #4cc9f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 min-h-screen transition-colors duration-200">
+    <!-- 导航栏 -->
+    <header class="bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <nav class="flex justify-between items-center py-4">
+                <div class="flex items-center gap-3 text-2xl font-bold">
+                    <i class="fas fa-qrcode text-accent-500"></i>
+                    <span>QR Studio</span>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <a href="/" class="px-3 py-2 rounded-md bg-white/10 font-medium hover:bg-white/20 transition">
+                        <i class="fas fa-home mr-2"></i>首页
+                    </a>
+                    <a href="/qr-form" class="px-3 py-2 rounded-md font-medium hover:bg-white/10 transition">
+                        <i class="fas fa-qrcode mr-2"></i>生成二维码
+                    </a>
+                    <a href="/page_manager" class="px-3 py-2 rounded-md font-medium hover:bg-white/10 transition">
+                        <i class="fas fa-file-alt mr-2"></i>网页管理
+                    </a>
+                    <button @click="darkMode = !darkMode" class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition">
+                        <span x-show="!darkMode"><i class="fas fa-moon"></i></span>
+                        <span x-show="darkMode"><i class="fas fa-sun"></i></span>
+                    </button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
     <div class="container mx-auto px-4 py-8 max-w-6xl">
-        <!-- 导航栏 -->
-        <nav class="flex justify-between items-center mb-12">
-            <div class="text-2xl font-bold text-primary-600 dark:text-primary-400">QR Generator</div>
-            <div class="flex items-center space-x-6">
-                <a href="/" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium">首页</a>
-                <a href="/qr-form" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium">生成二维码</a>
-                <a href="#" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium">关于我们</a>
-                <button @click="darkMode = !darkMode" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700">
-                    <span x-show="!darkMode">🌙</span>
-                    <span x-show="darkMode">☀️</span>
-                </button>
-            </div>
-        </nav>
 
         <!-- 主内容 -->
-        <div class="grid md:grid-cols-2 gap-12 items-center">
-            <div class="space-y-6">
-                <h1 class="text-4xl font-bold text-gray-800 dark:text-white">
-                    创建您的专属<br>
-                    <span class="text-primary-600 dark:text-primary-400">二维码页面</span>
-                </h1>
-                <p class="text-lg text-gray-600 dark:text-gray-300">
-                    轻松生成包含自定义内容的精美二维码，分享您的想法和内容。
-                </p>
-                <div class="space-y-4">
-                    <a href="/qr-form" class="inline-block px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors">
-                        开始创建
-                    </a>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
-                        无需注册，完全免费使用
-                    </p>
+        <div class="text-center py-12">
+            <h1 class="text-5xl font-bold mb-6 gradient-text">
+                轻松创建二维码与管理网页内容
+            </h1>
+            <p class="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8">
+                一站式解决方案，将网址转换为二维码并管理您的自定义网页
+            </p>
+            <a href="/qr-form" class="inline-flex items-center px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-bold text-lg transition-colors shadow-lg">
+                <i class="fas fa-bolt mr-3"></i>立即生成二维码
+            </a>
+        </div>
+
+        <!-- 功能特点 -->
+        <div class="grid md:grid-cols-3 gap-8 mt-16">
+            <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                <div class="text-primary-500 dark:text-primary-400 text-4xl mb-4">
+                    <i class="fas fa-qrcode"></i>
                 </div>
+                <h3 class="font-bold text-xl mb-3 text-gray-800 dark:text-white">网址转二维码</h3>
+                <p class="text-gray-600 dark:text-gray-400">
+                    将任何网址转换为高质量二维码，支持PNG格式下载
+                </p>
             </div>
-            <div class="hidden md:block">
-                <div class="relative">
-                    <div class="absolute -inset-4 bg-gradient-to-r from-primary-400 to-primary-600 rounded-2xl opacity-20 blur"></div>
-                    <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                        <div class="flex justify-center mb-4">
-                            <div class="w-48 h-48 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                                <span class="text-gray-400 dark:text-gray-500">二维码预览</span>
-                            </div>
-                        </div>
-                        <div class="text-center">
-                            <h3 class="font-medium text-gray-800 dark:text-white">示例页面</h3>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">扫描查看内容</p>
-                        </div>
+            <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                <div class="text-primary-500 dark:text-primary-400 text-4xl mb-4">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <h3 class="font-bold text-xl mb-3 text-gray-800 dark:text-white">自定义网页</h3>
+                <p class="text-gray-600 dark:text-gray-400">
+                    创建包含文字、图片和视频的个性化网页
+                </p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                <div class="text-primary-500 dark:text-primary-400 text-4xl mb-4">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <h3 class="font-bold text-xl mb-3 text-gray-800 dark:text-white">内容管理</h3>
+                <p class="text-gray-600 dark:text-gray-400">
+                    自由组合内容块，按需排序展示顺序
+                </p>
+            </div>
+        </div>
+
+        <!-- 示例展示 -->
+        <div class="mt-20 bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">最近创建的页面</h2>
+            </div>
+            <div class="p-6 grid md:grid-cols-3 gap-6">
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                    <div class="h-48 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                        <i class="fas fa-image text-4xl text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg mb-1">产品介绍页</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">修改于 今天 14:30</p>
+                    </div>
+                </div>
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                    <div class="h-48 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                        <i class="fas fa-image text-4xl text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg mb-1">活动宣传页</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">修改于 昨天 10:15</p>
+                    </div>
+                </div>
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                    <div class="h-48 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                        <i class="fas fa-image text-4xl text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg mb-1">公司简介</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">修改于 2023-07-25</p>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- 功能特点 -->
-        <div class="mt-16">
-            <h2 class="text-2xl font-bold text-center mb-8 text-gray-800 dark:text-white">为什么选择我们</h2>
-            <div class="grid md:grid-cols-3 gap-6">
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
-                    <div class="text-primary-500 dark:text-primary-400 text-2xl mb-3">🎨</div>
-                    <h3 class="font-medium text-lg mb-2 text-gray-800 dark:text-white">美观设计</h3>
-                    <p class="text-gray-600 dark:text-gray-400">精心设计的页面模板，让您的二维码与众不同</p>
-                </div>
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
-                    <div class="text-primary-500 dark:text-primary-400 text-2xl mb-3">⚡</div>
-                    <h3 class="font-medium text-lg mb-2 text-gray-800 dark:text-white">快速生成</h3>
-                    <p class="text-gray-600 dark:text-gray-400">简单三步，即可生成您的专属二维码</p>
-                </div>
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
-                    <div class="text-primary-500 dark:text-primary-400 text-2xl mb-3">🔒</div>
-                    <h3 class="font-medium text-lg mb-2 text-gray-800 dark:text-white">安全可靠</h3>
-                    <p class="text-gray-600 dark:text-gray-400">所有数据仅在您设备上处理，保护隐私</p>
-                </div>
-            </div>
-        </div>
     </div>
+
+    <!-- 页脚 -->
+    <footer class="mt-20 py-8 text-center text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
+        <div class="container mx-auto px-4">
+            <p>© 2023 QR Studio - 二维码生成与网页管理平台 | 轻松创建自定义页面和二维码</p>
+        </div>
+    </footer>
 </body>
 </html>

@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Studio - 二维码生成与网页管理平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4ade80;
+            --warning: #facc15;
+            --danger: #f87171;
+            --gray: #6c757d;
+            --border: #dee2e6;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding-bottom: 40px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* 导航栏样式 */
+        header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo i {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            padding: 8px 12px;
+            border-radius: 5px;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        /* 页面标题 */
+        .page-title {
+            text-align: center;
+            margin: 40px 0 30px;
+            position: relative;
+        }
+
+        .page-title h1 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .page-title p {
+            font-size: 1.2rem;
+            color: var(--gray);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .page-title::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: var(--accent);
+            margin: 20px auto 0;
+            border-radius: 2px;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 25px;
+            margin-bottom: 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-header h2 {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        /* 按钮样式 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary);
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--dark);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        /* 表单元素 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        /* 首页样式 */
+        .hero {
+            text-align: center;
+            padding: 60px 0 40px;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            max-width: 700px;
+            margin: 0 auto 30px;
+            color: var(--gray);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .feature-card i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        /* 二维码生成器 */
+        .qr-generator {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .qr-controls {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .qr-preview {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #qrcode {
+            width: 250px;
+            height: 250px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 网页管理 */
+        .page-manager {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+        }
+
+        .page-list {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .page-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+        }
+
+        .page-item:hover {
+            background: #f1f3ff;
+            border-color: var(--primary);
+        }
+
+        .page-item.active {
+            background: #e6f0ff;
+            border-color: var(--primary);
+        }
+
+        .page-item h3 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .page-item .meta {
+            display: flex;
+            justify-content: space-between;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .page-editor {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 25px;
+        }
+
+        .editor-area {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+        }
+
+        .preview-area {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .preview-phone {
+            width: 280px;
+            height: 500px;
+            background: #f0f0f0;
+            border-radius: 30px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .preview-phone:before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40%;
+            height: 6px;
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .block-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border: 1px solid var(--border);
+        }
+
+        .block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .block-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .block-content {
+            padding: 10px 0;
+        }
+
+        .text-block {
+            min-height: 100px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .image-block {
+            min-height: 150px;
+            background: #f0f0f0;
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray);
+        }
+
+        .video-block {
+            min-height: 150px;
+            background: #f0f0f0;
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray);
+        }
+
+        .block-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            .page-manager {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-editor {
+                grid-template-columns: 1fr;
+            }
+            
+            .preview-area {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            .qr-generator {
+                flex-direction: column;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 页脚 */
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            color: var(--gray);
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <div class="logo">
+                    <i class="fas fa-qrcode"></i>
+                    <span>QR Studio</span>
+                </div>
+                <div class="nav-links">
+                    <a href="#home" class="active"><i class="fas fa-home"></i> 首页</a>
+                    <a href="#qr-generator"><i class="fas fa-qrcode"></i> 二维码生成</a>
+                    <a href="#page-manager"><i class="fas fa-file-code"></i> 网页管理</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- 首页 -->
+        <section id="home">
+            <div class="hero">
+                <h1>轻松创建二维码与管理网页内容</h1>
+                <p>一站式解决方案，将网址转换为二维码并管理您的自定义网页</p>
+                <a href="#qr-generator" class="btn btn-primary">
+                    <i class="fas fa-bolt"></i> 立即生成二维码
+                </a>
+            </div>
+
+            <div class="features">
+                <div class="feature-card">
+                    <i class="fas fa-qrcode"></i>
+                    <h3>网址转二维码</h3>
+                    <p>将任何网址转换为高质量二维码，支持PNG格式下载</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-file-alt"></i>
+                    <h3>自定义网页</h3>
+                    <p>创建包含文字、图片和视频的个性化网页</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-layer-group"></i>
+                    <h3>内容管理</h3>
+                    <p>自由组合内容块，按需排序展示顺序</p>
+                </div>
+            </div>
+
+            <!-- <div class="page-title">
+                <h1>最近管理的网页</h1>
+                <p>您最近创建和编辑的自定义网页</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>我的网页</h2>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i> 新建网页
+                    </button>
+                </div>
+                
+                <div class="page-list">
+                    <div class="page-item active">
+                        <h3>产品介绍页</h3>
+                        <div class="meta">
+                            <span>修改: 今天 14:30</span>
+                            <span>3个内容块</span>
+                        </div>
+                    </div>
+                    <div class="page-item">
+                        <h3>活动宣传页</h3>
+                        <div class="meta">
+                            <span>修改: 昨天 10:15</span>
+                            <span>5个内容块</span>
+                        </div>
+                    </div>
+                    <div class="page-item">
+                        <h3>公司简介</h3>
+                        <div class="meta">
+                            <span>修改: 2023-07-25</span>
+                            <span>4个内容块</span>
+                        </div>
+                    </div>
+                    <div class="page-item">
+                        <h3>服务价格表</h3>
+                        <div class="meta">
+                            <span>修改: 2023-07-20</span>
+                            <span>2个内容块</span>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+        </section>
+
+        <!-- 二维码生成器 -->
+        <section id="qr-generator">
+            <div class="page-title">
+                <h1>二维码生成器</h1>
+                <p>将您的网址转换为二维码图片，支持自定义颜色和尺寸</p>
+            </div>
+
+            <div class="card">
+                <div class="qr-generator">
+                    <div class="qr-controls">
+                        <div class="form-group">
+                            <label for="url-input">输入网址</label>
+                            <input type="url" id="url-input" class="form-control" 
+                                   placeholder="https://example.com" 
+                                   value="https://www.example.com/product-page">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>二维码尺寸</label>
+                            <div style="display: flex; gap: 15px;">
+                                <label style="flex: 1;">
+                                    <input type="radio" name="size" value="200" checked> 小 (200×200)
+                                </label>
+                                <label style="flex: 1;">
+                                    <input type="radio" name="size" value="300"> 中 (300×300)
+                                </label>
+                                <label style="flex: 1;">
+                                    <input type="radio" name="size" value="400"> 大 (400×400)
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="foreground-color">前景色</label>
+                            <input type="color" id="foreground-color" class="form-control" value="#000000">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="background-color">背景色</label>
+                            <input type="color" id="background-color" class="form-control" value="#ffffff">
+                        </div>
+                        
+                        <button id="generate-btn" class="btn btn-primary" style="width: 100%;">
+                            <i class="fas fa-bolt"></i> 生成二维码
+                        </button>
+                    </div>
+                    
+                    <div class="qr-preview">
+                        <h3>二维码预览</h3>
+                        <div id="qrcode"></div>
+                        <div style="display: flex; gap: 15px; margin-top: 20px;">
+                            <button class="btn btn-success">
+                                <i class="fas fa-download"></i> 下载PNG
+                            </button>
+                            <button class="btn btn-secondary">
+                                <i class="fas fa-copy"></i> 复制图片
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 网页管理 -->
+        <section id="page-manager">
+            <div class="page-title">
+                <h1>网页管理</h1>
+                <p>创建、编辑和管理您的自定义网页内容</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>产品介绍页</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-success">
+                            <i class="fas fa-save"></i> 保存
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-qrcode"></i> 生成二维码
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="page-manager">
+                    <div class="page-list">
+                        <div style="display: flex; margin-bottom: 15px; gap: 10px;">
+                            <input type="text" class="form-control" placeholder="搜索网页...">
+                            <button class="btn btn-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        
+                        <button class="btn btn-primary" style="width: 100%; margin-bottom: 20px;">
+                            <i class="fas fa-plus"></i> 新建网页
+                        </button>
+                        
+                        <div class="page-item active">
+                            <h3>产品介绍页</h3>
+                            <div class="meta">
+                                <span>修改: 今天 14:30</span>
+                                <span>3个内容块</span>
+                            </div>
+                        </div>
+                        <div class="page-item">
+                            <h3>活动宣传页</h3>
+                            <div class="meta">
+                                <span>修改: 昨天 10:15</span>
+                                <span>5个内容块</span>
+                            </div>
+                        </div>
+                        <div class="page-item">
+                            <h3>公司简介</h3>
+                            <div class="meta">
+                                <span>修改: 2023-07-25</span>
+                                <span>4个内容块</span>
+                            </div>
+                        </div>
+                        <div class="page-item">
+                            <h3>服务价格表</h3>
+                            <div class="meta">
+                                <span>修改: 2023-07-20</span>
+                                <span>2个内容块</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="page-editor">
+                        <div class="editor-area">
+                            <div class="form-group">
+                                <label for="page-title">网页标题</label>
+                                <input type="text" id="page-title" class="form-control" value="产品介绍页">
+                            </div>
+                            
+                            <h3 style="margin: 25px 0 15px;">内容块</h3>
+                            
+                            <div class="block-item">
+                                <div class="block-header">
+                                    <h4><i class="fas fa-heading"></i> 标题文本</h4>
+                                    <div class="block-actions">
+                                        <button class="btn btn-sm btn-secondary">
+                                            <i class="fas fa-arrow-up"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary">
+                                            <i class="fas fa-arrow-down"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="block-content">
+                                    <div class="text-block">
+                                        <h2>欢迎使用我们的产品</h2>
+                                        <p>这是一款改变您工作方式的革命性产品，具有卓越性能和易用性。</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="block-item">
+                                <div class="block-header">
+                                    <h4><i class="fas fa-image"></i> 产品图片</h4>
+                                    <div class="block-actions">
+                                        <button class="btn btn-sm btn-secondary">
+                                            <i class="fas fa-arrow-up"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary">
+                                            <i class="fas fa-arrow-down"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="block-content">
+                                    <div class="image-block">
+                                        <i class="fas fa-image fa-3x"></i>
+                                        <p>产品主图.jpg</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="block-item">
+                                <div class="block-header">
+                                    <h4><i class="fas fa-video"></i> 产品视频</h4>
+                                    <div class="block-actions">
+                                        <button class="btn btn-sm btn-secondary">
+                                            <i class="fas fa-arrow-up"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary">
+                                            <i class="fas fa-arrow-down"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="block-content">
+                                    <div class="video-block">
+                                        <i class="fas fa-video fa-3x"></i>
+                                        <p>产品演示视频</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="block-controls">
+                                <button class="btn btn-secondary">
+                                    <i class="fas fa-plus"></i> 添加文本块
+                                </button>
+                                <button class="btn btn-secondary">
+                                    <i class="fas fa-plus"></i> 添加图片块
+                                </button>
+                                <button class="btn btn-secondary">
+                                    <i class="fas fa-plus"></i> 添加视频块
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="preview-area">
+                            <h3>移动端预览</h3>
+                            <div class="preview-phone">
+                                <h2 style="text-align: center; margin: 20px 0;">产品介绍页</h2>
+                                <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 15px;">
+                                    <h2>欢迎使用我们的产品</h2>
+                                    <p>这是一款改变您工作方式的革命性产品，具有卓越性能和易用性。</p>
+                                </div>
+                                <div style="background: #f0f0f0; height: 200px; border-radius: 10px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-image fa-3x"></i>
+                                </div>
+                                <div style="background: #f0f0f0; height: 200px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-video fa-3x"></i>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 20px; text-align: center;">
+                                <h3>此页面的二维码</h3>
+                                <div style="width: 150px; height: 150px; background: #eee; margin: 10px auto; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-qrcode fa-3x"></i>
+                                </div>
+                                <button class="btn btn-sm btn-success">
+                                    <i class="fas fa-download"></i> 下载二维码
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>© 2023 QR Studio - 二维码生成与网页管理平台 | 轻松创建自定义页面和二维码</p>
+        </div>
+    </footer>
+
+    <script>
+        // 生成二维码
+        document.getElementById('generate-btn').addEventListener('click', function() {
+            const url = document.getElementById('url-input').value || 'https://example.com';
+            const size = document.querySelector('input[name="size"]:checked').value;
+            const fgColor = document.getElementById('foreground-color').value;
+            const bgColor = document.getElementById('background-color').value;
+            
+            const qrcodeDiv = document.getElementById('qrcode');
+            qrcodeDiv.innerHTML = '';
+            
+            new QRCode(qrcodeDiv, {
+                text: url,
+                width: size,
+                height: size,
+                colorDark: fgColor,
+                colorLight: bgColor,
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        });
+        
+        // 初始生成一个二维码
+        window.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('generate-btn').click();
+        });
+        
+        // 页面导航效果
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        // 页面项点击效果
+        document.querySelectorAll('.page-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.page-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
